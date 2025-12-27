@@ -46,8 +46,35 @@ END;
 
 CALL sql_invoicing.get_risk_factor();
 
+CREATE FUNCTION sql_invoicing.get_risk_factor()
+RETURNS DECIMAL(9,2)
+READS SQL DATA
+BEGIN
+    DECLARE risk_factor DECIMAL(9,2) DEFAULT 0;
+    DECLARE invoices_total DECIMAL(9,2);
+    DECLARE invoices_count INT;
 
+    SELECT 
+        COUNT(*), 
+        SUM(invoice_total)
+    INTO 
+        invoices_count, 
+        invoices_total
+    FROM sql_invoicing.invoices;
 
+    IF invoices_count > 0 THEN
+        SET risk_factor = invoices_total / invoices_count * 5;
+    ELSE
+        SET risk_factor = 0;
+    END IF;
+
+    RETURN risk_factor;
+END;
+
+SELECT DISTINCT 
+    client_id,
+    sql_invoicing.get_risk_factor() AS risk_factor
+FROM sql_invoicing.invoices;
 
 
 
